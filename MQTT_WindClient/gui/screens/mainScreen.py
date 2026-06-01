@@ -9,6 +9,7 @@ from PyQt6 import QtCore
 # import random
 # import numpy as np
 from controller import guiUpdateData
+from json import load
 
 class DashboardPage(QWidget):
     def __init__(self):
