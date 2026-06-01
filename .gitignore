@@ -1,0 +1,6 @@
+.vscode
+MQTT_WindClient/.vscode
+MQTT_WindClient/.env
+MQTT_WindClient/mqtt/__pycache__
+MQTT_WindClient/gui/screens/__pycache__
+MQTT_WindClient/gui/widgets/__pycache__
