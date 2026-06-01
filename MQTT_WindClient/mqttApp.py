@@ -1,9 +1,9 @@
 """
 MQTT Application script - MQTT subscriber client in Windows
 """
-from MQTT_ProjectFolder.mqttApp.mqtt.manager import *
-from MQTT_ProjectFolder.mqttApp.mqtt.config import topicList
-from MQTT_ProjectFolder.mqttApp.mqtt.layout import CONSOLE_HEADER
+from mqtt.manager import *
+from mqtt.config import topicList
+from mqtt.layout import CONSOLE_HEADER
 
 #TODO: Add user data selection choice (buttons? for GUI), (option1, option2, ..., various ones, all)
 #TODO: Handle change of QoS ? -> might be useless we will only take QoS = 0
@@ -27,7 +27,8 @@ def mqttSubStart():
         
 
 
-#TODO: GUI: Open window, ask for user to start the MQTT subscription to launch and get data
+#TODO: GUI: Open window, ask for user to start the MQTT subscription to launch and get data -> does it need a specific thread ?
+#TODO: Add Flag to enable GUI
 
 if __name__ == "__main__":
     mqttSubStart()

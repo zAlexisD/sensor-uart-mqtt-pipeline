@@ -32,7 +32,7 @@ MAX_PAYLOAD_SIZE = 5 * kiloByte
 # Define a session ID corresponding to MQTT session start time for data saving part
 sessionID = datetime.now().strftime("%Y%m%d_%H%M%S")
 
-# Define a timestamp queue
+# Init a timestamp queue
 timeTrack = []
 
 # Track topics measures via a dictionary counting messages received for specific topic
@@ -41,3 +41,6 @@ msgCount = initJson(0,topicList)
 
 # Define a buffer queue for MQTT-GUI bridging
 buffer = queue.Queue(maxsize=300)
+
+# Init Log file for GUI
+guiLogFile = []

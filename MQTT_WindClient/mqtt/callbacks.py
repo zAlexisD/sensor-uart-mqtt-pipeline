@@ -1,8 +1,9 @@
 """
 MQTT Module for API Callbacks
 """
-from mqtt.config import sessionID
+from mqtt.config import sessionID,MAX_PAYLOAD_SIZE,buffer
 from mqtt.handlers import saveToJson
+from gui.controller import guiGetData
 
 def on_subscribe(client, userdata, mid, reason_code_list, properties):
     # Since we subscribed only for a single channel, reason_code_list contains
@@ -25,11 +26,20 @@ def on_unsubscribe(client, userdata, mid, reason_code_list, properties):
     # client.disconnect()
 
 def on_message(client, userdata, message):
-    #TODO: Handle datatypes + make display simpler to avoir overloading command window
-    #TODO: Might handle if payload too large
+    msgPayload = message.payload
+    size = len(msgPayload)
+    
+    if size > MAX_PAYLOAD_SIZE:
+        #TODO: Might add in logs
+        print(f"Dropped MQTT message: payload too large: {size} bytes")
+        return
     msgTopic    = message.topic
-    msgContent  = message.payload.decode()
+    msgContent  = msgPayload.decode()
+
+    #TODO: Migth make display simpler to avoir overloading command window
     print(f"\n[PUB] Received from topic `{msgTopic}`: `{msgContent}`")
+
+    guiGetData(buffer,msgTopic,msgPayload)
     saveToJson(topic = msgTopic,data = msgContent)
 
 def on_connect(client, userdata, flags, reason_code, properties):
