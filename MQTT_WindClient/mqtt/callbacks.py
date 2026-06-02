@@ -3,13 +3,14 @@ MQTT Module for API Callbacks
 """
 from mqtt.config import sessionID,MAX_PAYLOAD_SIZE,buffer
 from mqtt.handlers import saveToJson
-from gui.controller import guiGetData
+from gui.controller import guiGetData,addToLog
 
 def on_subscribe(client, userdata, mid, reason_code_list, properties):
     # Since we subscribed only for a single channel, reason_code_list contains
     # a single entry
     if reason_code_list[0].is_failure:
         print(f"ERR: Broker rejected you subscription: {reason_code_list[0]}")
+        addToLog(f"Sub failed -> {reason_code_list[0]}")
     else:
         print("[INFO] Subscription succeded")
         print(f"[INFO] Broker granted the following QoS: {reason_code_list[0].value}")
@@ -23,18 +24,19 @@ def on_unsubscribe(client, userdata, mid, reason_code_list, properties):
         print("[INFO] Unsubscription succeeded")
     else:
         print(f"ERR: Broker replied with failure: {reason_code_list[0]}")
+        addToLog(f"Unsub failed -> {reason_code_list[0]}")
     # client.disconnect()
 
 def on_message(client, userdata, message):
     msgPayload = message.payload
     size = len(msgPayload)
-    
-    if size > MAX_PAYLOAD_SIZE:
-        #TODO: Might add in logs
-        print(f"Dropped MQTT message: payload too large: {size} bytes")
-        return
     msgTopic    = message.topic
     msgContent  = msgPayload.decode()
+    
+    if size > MAX_PAYLOAD_SIZE:
+        print(f"Dropped MQTT message: payload too large: {size} bytes")
+        addToLog(f"{msgTopic}-> too large ({size} B)")
+        return
 
     #TODO: Migth make display simpler to avoir overloading command window
     print(f"\n[PUB] Received from topic `{msgTopic}`: `{msgContent}`")
@@ -45,6 +47,7 @@ def on_message(client, userdata, message):
 def on_connect(client, userdata, flags, reason_code, properties):
     if reason_code.is_failure:
         print(f"ERR: Failed to connect: {reason_code}. Retry connection")
+        addToLog(f"Connect failed -> {reason_code}")
     else:
         # we should always subscribe from on_connect callback to be sure
         # our subscribed is persisted across reconnections.

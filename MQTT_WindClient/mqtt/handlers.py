@@ -48,7 +48,7 @@ def processData(topic:str,data:Any):
         return "Config/Status",{topic: data}
 
 #TODO: Received data manager -> take to plot, store somewhere
-def storeData(dataDict: dict,filepath:str):
+def storeData(dataDict: Any,filepath:str):
     with open(filepath,"w",encoding='utf-8') as f:
         json.dump(dataDict,f,indent=4)
 
