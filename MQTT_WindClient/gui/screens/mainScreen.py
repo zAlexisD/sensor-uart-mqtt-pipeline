@@ -8,8 +8,9 @@ from widgets.tempWidget import TemperatureWidget
 from PyQt6 import QtCore
 # import random
 # import numpy as np
-from controller import guiUpdateData
-from json import load
+from controller import guiUpdateData,addToLog
+from json import load,JSONDecodeError
+from mqtt.config import sessionID,buffer
 
 class DashboardPage(QWidget):
     def __init__(self):
@@ -18,20 +19,30 @@ class DashboardPage(QWidget):
         self.setWindowTitle("MQTT GUI Application")
         self.setStyleSheet("background-color: #514A6A")
 
-        #TODO: Load config
-
         # Define all different widgets
-        self.temp       = TemperatureWidget()
-        self.battery    = BatteryWidget()
-        # self.devConfig  = ConfigWidget()
-        # self.rangParams = ConfigWidget()
+        self.temp    = TemperatureWidget()
+        self.battery = BatteryWidget()
 
         # Set widgets on the window grid
         mainLayout = QGridLayout()
         mainLayout.addWidget(self.temp,0,0)
         mainLayout.addWidget(self.battery,0,1)
-        # mainLayout.addWidget(self.devConfig,0,2)
-        # mainLayout.addWidget(self.rangParams,0,3)
+
+        # Load config if exists and create corresponding widgets
+        configPath = f"data/config_{sessionID}.json"
+        try:
+            with open(configPath,"r",encoding="utf-8") as file:
+                configs = load(file)
+                # Init config widgets class
+                self.devConfig  = ConfigWidget("DeviceInfo",configs["DeviceInfo"])
+                self.rangParams = ConfigWidget("RangingParameter",configs["RangingParameter"])
+                # Add to window
+                mainLayout.addWidget(self.devConfig,0,2)
+                mainLayout.addWidget(self.rangParams,0,3)
+        except FileNotFoundError:
+            addToLog("Error loading JSON: File not found")
+        except JSONDecodeError as e:
+            addToLog(f"Error decoding JSON: {e}")
 
         self.setLayout(mainLayout)
 
@@ -49,8 +60,8 @@ class DashboardPage(QWidget):
         # tempValue = np.random.randint(20, 60)
         # batValue = np.random.randint(80, 100)
 
-        #TODO: make connection with MQTT client to update values
-        topic,value = guiUpdateData()
+        # Connection with MQTT client to update values
+        topic,value = guiUpdateData(buffer)
         if topic == "ADCTemperature":
             self.temp.update_data(value)
         else:
