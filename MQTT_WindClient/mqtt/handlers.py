@@ -3,7 +3,7 @@ MQTT Module for logic handling
 """
 from typing import Any
 import json
-from mqtt.config import topicList,sessionID,msgCount,timeTrack,infoTopics
+from mqtt.config import topicList,sessionID,msgCount,timeTrack,infoTopics,statusTopics
 import os
 
 #TODO: topic selection handler
@@ -52,30 +52,48 @@ def storeData(dataDict: dict,filepath:str):
     with open(filepath,"w",encoding='utf-8') as f:
         json.dump(dataDict,f,indent=4)
 
+# Method to check if file exists, if not create + init it
+def setupJson(path:str):
+    # Load this file or create it if it does not exist yet
+    if os.path.exists(path):
+        with open(path, 'r', encoding='utf-8') as f:
+            try:
+                loaded = json.load(f)
+                if not isinstance(loaded, dict):
+                    print("Warning: JSON root is not a dictionary. Overwriting.")
+                    loaded = initJson(defaultValue=[])
+            except json.JSONDecodeError:
+                print("Warning: JSON file is empty or invalid. Starting fresh.")
+                loaded = initJson(defaultValue=[])
+    else:
+        loaded = initJson(defaultValue=[])
+    
+    return loaded
+
 # Update json file method to store every data from same session in one file
 def saveToJson(topic:str,data:Any,sessionID:int=sessionID):
     jsonPath = f"data/{sessionID}.json"
     try:
         # Load this file or create it if it does not exist yet
-        if os.path.exists(jsonPath):
-            with open(jsonPath, 'r', encoding='utf-8') as f:
-                try:
-                    loaded = json.load(f)
-                    if not isinstance(loaded, dict):
-                        print("Warning: JSON root is not a dictionary. Overwriting.")
-                        loaded = initJson(defaultValue=[])
-                except json.JSONDecodeError:
-                    print("Warning: JSON file is empty or invalid. Starting fresh.")
-                    loaded = initJson(defaultValue=[])
-        else:
-            loaded = initJson(defaultValue=[])
+        loaded = setupJson(jsonPath)
         
         # Process data and merge with the loaded one
         case,processedData = processData(topic,data)
         if case == "Info":
             loaded.setdefault(topic,[]).append(processedData)
-        elif case == "Config/Status":
+        # Save status in same file
+        elif topic in statusTopics:
             loaded.update(processedData)
+        # Handle case topic is Timestamp -> ignore
+        elif topic == "Timestamp":
+            return
+        # Config case -> save in a specific file
+        else:
+            configPath = f"data/config_{sessionID}.json"
+            loadConfig = setupJson(configPath)
+            loadConfig.update(processData)
+            storeData(loadConfig,configPath)
+            return
         
         # Save the file again
         storeData(loaded,jsonPath)
