@@ -3,3 +3,4 @@ from configWidget import *
 from tempWidget import *
 from textWidget import *
 from statusWidget import *
+from logWidget import *

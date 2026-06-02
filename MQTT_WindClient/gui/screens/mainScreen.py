@@ -5,6 +5,7 @@ from PyQt6.QtWidgets import QWidget,QGridLayout
 from widgets.batWidget import BatteryWidget
 from widgets.configWidget import ConfigWidget
 from widgets.tempWidget import TemperatureWidget
+from widgets.logWidget import LogWidget
 from PyQt6 import QtCore
 # import random
 # import numpy as np
@@ -22,12 +23,15 @@ class DashboardPage(QWidget):
         # Define all different widgets
         self.temp    = TemperatureWidget()
         self.battery = BatteryWidget()
+        self.logs    = LogWidget()
 
         # Set widgets on the window grid
         mainLayout = QGridLayout()
         mainLayout.addWidget(self.temp,0,0)
         mainLayout.addWidget(self.battery,0,1)
+        mainLayout.addWidget(self.logs,0,2)
 
+        #TODO: To avoid overloading window, can put config on popup by pressing button
         # Load config if exists and create corresponding widgets
         configPath = f"data/config_{sessionID}.json"
         try:

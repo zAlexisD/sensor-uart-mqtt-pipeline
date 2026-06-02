@@ -3,7 +3,8 @@ GUI Module for logic methods between UI and MQTT Client
 """
 from typing import Any
 from queue import Queue,Full,Empty
-from MQTT_WindClient.mqtt.config import infoTopics,guiLogFile
+from MQTT_WindClient.mqtt.config import infoTopics,LogQueue
+import time
 
 # Take data from on_message MQTT callback
 def guiGetData(buffer:Queue,topic:str,data:Any):
@@ -24,5 +25,5 @@ def guiUpdateData(buffer:Queue):
 #TODO: Handle status data
 
 # Handle log data
-def addToLog(errorLog:str,logQueue:list=guiLogFile):
-    logQueue.append(errorLog)
+def addToLog(errorLog:str,logQueue:Queue=LogQueue):
+    logQueue.put(f"{time.time()}: " + errorLog)
