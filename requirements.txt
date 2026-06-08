@@ -1,0 +1,6 @@
+paho-mqtt>=1.6.1
+pyserial>=3.5
+numpy>=1.26
+PyQt6>=6.6
+pyqtgraph>=0.13
+python-dotenv>=1.0
