@@ -1,17 +1,16 @@
 """
 Screen Module for main page of GUI
 """
-from PyQt6.QtWidgets import QWidget,QGridLayout
+from PyQt6.QtWidgets import QWidget,QGridLayout,QPushButton
 from widgets.batWidget import BatteryWidget
-from widgets.configWidget import ConfigWidget
 from widgets.tempWidget import TemperatureWidget
 from widgets.logWidget import LogWidget
 from PyQt6 import QtCore
+from screens.configScreen import ConfigWindow
 # import random
 # import numpy as np
-from controller import guiUpdateData,addToLog
-from json import load,JSONDecodeError
-from mqtt.config import sessionID,buffer
+from controller import guiUpdateData
+from mqtt.config import buffer
 
 class DashboardPage(QWidget):
     def __init__(self):
@@ -31,23 +30,6 @@ class DashboardPage(QWidget):
         mainLayout.addWidget(self.battery,0,1)
         mainLayout.addWidget(self.logs,0,2)
 
-        #TODO: To avoid overloading window, can put config on popup by pressing button
-        # Load config if exists and create corresponding widgets
-        configPath = f"data/config_{sessionID}.json"
-        try:
-            with open(configPath,"r",encoding="utf-8") as file:
-                configs = load(file)
-                # Init config widgets class
-                self.devConfig  = ConfigWidget("DeviceInfo",configs["DeviceInfo"])
-                self.rangParams = ConfigWidget("RangingParameter",configs["RangingParameter"])
-                # Add to window
-                mainLayout.addWidget(self.devConfig,0,2)
-                mainLayout.addWidget(self.rangParams,0,3)
-        except FileNotFoundError:
-            addToLog("Error loading JSON: File not found")
-        except JSONDecodeError as e:
-            addToLog(f"Error decoding JSON: {e}")
-
         self.setLayout(mainLayout)
 
         # Set up a timer to update the plots
@@ -55,6 +37,10 @@ class DashboardPage(QWidget):
         self.timer.setInterval(500)  # 500ms = 2 updates per second
         self.timer.timeout.connect(self.update_data)
         self.timer.start()
+
+        # Set up button to display popup config window
+        self.showConfig = QPushButton("Show Config")
+        self.showConfig.clicked.connect(self.openConfig)
 
     def update_data(self):
         # Update digits displays
@@ -70,3 +56,11 @@ class DashboardPage(QWidget):
             self.temp.update_data(value)
         else:
             self.battery.update_data(value)
+
+    # Config window popup properties
+    def openConfig(self):
+        if not hasattr(self):
+            self.configWind = ConfigWindow()
+        self.configWind.show()
+        self.configWind.raise_()
+        self.configWind.activateWindow()
