@@ -6,15 +6,17 @@ from mqtt.config import *
 from mqtt.callbacks import *
 from mqtt.layout import dispStatus,COMMANDS_HEADER
 
-def newClient(logs: bool = False) -> mqtt:
+def newClient(logs:bool = False,
+              brokIP:str = brokerIP,brokPort:int = brokerPort,
+              cliUser:str = clientUsername,cliPwd:str = clientPwd) -> mqtt:
     mqttc = mqtt.Client(callback_api_version=mqtt.CallbackAPIVersion.VERSION2,client_id=clientID)
-    mqttc.username_pw_set(clientUsername,clientPwd)
+    mqttc.username_pw_set(cliUser,cliPwd)
     # Enable logs in commande window if precised
     if logs:
         mqttc.on_log = on_log
     mqttc.on_connect = on_connect
     print("[REQ] Connecting to Broker...")
-    mqttc.connect(brokerIP,brokerPort)
+    mqttc.connect(brokIP,brokPort)
     return mqttc
 
 #TODO: manage topic selection (show available topics?), default for now : whole list
