@@ -22,7 +22,7 @@ In the context of an internship small project, this repostitory presents an end-
 |--------------|-----------------|--------------------------|
 | **[Python 3.10+](ca://s?q=Explain_Python_requirement)** | Required for the Raspberry Pi publisher and Windows subscriber scripts. | https://www.python.org/downloads/ |
 | **[Python libraries](ca://s?q=Explain_Python_libraries_requirement)** | `paho-mqtt`, `pyserial`, `numpy`, etc. Listed in `requirements.txt`. | `pip install -r requirements.txt` |
-| **[Mosquitto MQTT Broker](ca://s?q=Explain_Mosquitto_requirement)** | Lightweight MQTT broker running on the Raspberry Pi or remote server. | https://mosquitto.org/download/ |
+| **[Mosquitto MQTT Broker](ca://s?q=Explain_Mosquitto_requirement)** | Lightweight MQTT broker running on the Raspberry Pi or remote server. | `sudo apt install mosquitto mosquitto-clients` |
 | **[MQTT Explorer](ca://s?q=Explain_MQTT_Explorer_requirement)** (optional) | GUI tool for inspecting topics and debugging MQTT traffic. | https://mqtt-explorer.com/ |
 | **[NXP MCUXpresso IDE](ca://s?q=Explain_MCUXpresso_requirement)** | Required only if you need to reprogram or debug the Murata Type 2BP firmware. | https://www.nxp.com/mcuxpresso |
 
@@ -32,8 +32,10 @@ In the context of an internship small project, this repostitory presents an end-
 |-----------|-----------------|-----------------------|
 | **[MQTT_WindClient](ca://s?q=Explain_Windows_MQTT_client_folder)** | Contains the Windows‑side MQTT subscriber and GUI application. Includes MQTT client logic, callbacks, and visualization scripts. | Subscribes to MQTT topics and displays or processes incoming sensor data. |
 | **[MQTT_RaspClient](ca://s?q=Explain_Raspberry_MQTT_client_folder)** | Contains the Raspberry Pi publisher logic, including UART reading, frame parsing, and MQTT publishing. | Reads UART data from the sensor and publishes structured messages to the MQTT broker. |
+| **[MQTT_sensorTag](ca://s?q=Explain_MQTT_sensorTag_folder)** | Contains **custom firmware files only** for the Murata Type 2BP sensor (no restricted SDK content). Includes modified source files used for UART output formatting. | Provides the firmware components required to program the sensor and ensure it outputs the correct UART data format for the pipeline. |
 
-The project is divided into two main components: the **Raspberry Pi publisher**, responsible for acquiring UART data from the Murata Type 2BP sensor and publishing it to the MQTT broker, and the **Windows client subscriber**, which receives, visualizes, and processes the published data. This separation ensures a clean architecture where data acquisition and data consumption remain independent and modular.
+The repository is organized into three independent components: the **sensor firmware**, the **Raspberry Pi publisher**, and the **Windows subscriber**. The `MQTT_sensorTag` folder contains only the custom firmware files used to configure the Murata Type 2BP UART output, while the Raspberry Pi and Windows folders contain the Python applications responsible for data acquisition and visualization. This modular structure ensures clean separation between firmware, data processing, and user‑side visualization.
+
 
 Additionaly:
 - `livePlot.py` is a sample test script for live scrolling plots with multi widgets for values such as **Temperature** and **Battery Level**.
@@ -48,7 +50,8 @@ The following steps describe how to deploy and run the complete MQTT data pipeli
 
 - Clone repository
   ```bash
-  git clone <https://github.com/zAlexisD/MQTT_App>```
+  git clone <https://github.com/zAlexisD/MQTT_App>
+  ```
 - Place the `MQTT_RaspClient` folder on the Raspberry Pi workspace.
 - Place the `MQTT_WindClient` folder on the Windows machine.
 
@@ -71,7 +74,7 @@ python3 mqttApp.py <gui_bool>
 
  Where:
 - `True` → Launches the GUI
-- `False` → Runs subscriber logic without GUI
+- default = `False` → Runs subscriber logic without GUI
 
 ## Sensor Side
 
@@ -91,19 +94,106 @@ As a result, only **customized source files** developed for this project are sha
 
 ---
 
-### 2. Custom Firmware Repository
+### 2. Custom Firmware Folder (`MQTT_sensorTag`)
 
-The modified source files used to adapt the Murata Type 2BP behavior (UART output, frame formatting, etc.) are available in the following repository:
+The **[MQTT_sensorTag](/MQTT_sensorTag)** folder contains **only the custom firmware files** used to modify the UART output behavior of the Murata Type 2BP (and some 2DK test files).  
+This avoids distributing restricted SDK content while still exposing the logic relevant to the MQTT pipeline.
 
-  **➡️ <.../CustomedApp_NXPqn9090>**
+#### 2.1 **[mqttAppHelper.c](MQTT_sensorTag/Type2BP/mqttAppHelpers.c)** — *Main file of interest*
 
-This repository contains only the **custom code**, not the full SDK.
+This is the **core file** for the sensor‑side logic. It:
 
-**Note:** In this repository, only the case `#if defined(CUSTOM_...)` interests us (i.e the folders ...).
+- Handles the extraction and formatting of measurement values  
+- Defines how each measurement is printed in the UART logs  
+- Ensures logs are emitted with **INFO priority**, making them easy to filter on the Raspberry Pi  
+- Implements the logic for sending structured measurement lines such as:
+```
+[INFO]: INFO: ADCTemperature: 30
+```
+
+#### 2.2 **[MyApp.h](/MQTT_sensorTag/Type2BP/MyApp.h)** - *Project Header file*
+
+APP Build Flags were initially defined in the NXP SDK `UWBIOT_APP_BUILD.h` file. To avoid importing it, we decide to define these flags in the main Header file. Therefore, the following changes need to be done for reuse:
+
+In every file containing something of the form:
+```c
+ #ifndef UWBIOT_APP_BUILD__MQTT_CONTROLEE
+ #include "UWBIOT_APP_BUILD.h"
+ #endif
+ ```
+ Replace `"UWBIOT_APP_BUILD.h"` by `"MyApp.h"`, 
+and remove the lines:
+```c
+#ifdef UWBIOT_APP_BUILD__MQTT_CONTROLEE
+#include "MyApp.h"
+```
 
 ---
 
-### 3. Flashing the Firmware (DK6Programmer)
+### 3. Updatable Values and the `MQTT_TASK()` Function
+
+- **[MQTT_TASK logic](ca://s?q=Explain_MQTT_TASK_logic)**  
+Dynamic values such as:
+  - temperature  
+  - battery level  
+  - other periodic measurements  
+
+  …are updated inside the `MQTT_TASK()` function.
+
+- **[Task scheduling](ca://s?q=Explain_MQTT_TASK_scheduling)**  
+This task is created in the NXP SDK’s `Standalone_Main_qn9090.c` using:
+
+```c
+xTaskCreate(MQTT_TASK, "MqttTask", 1024, NULL, 1, NULL);
+```
+
+The task periodically:
+- reads global variables
+- converts them into printable strings
+- prints them to UART using the INFO log level
+
+This ensures the Raspberry Pi receives consistent, structured UART frames.
+
+---
+
+### 4. UART Data Format and Helper Files
+
+The Murata Type 2BP sends measurement data over UART using a structured ASCII format.
+To simplify parsing on the Raspberry Pi, all measurement values are embedded inside the chip’s log system, using three datatypes:
+- `CONFIG`
+- `STATUS`
+- `INFO`
+
+Each log entry follows a strict format:
+```
+[CONFIG]: INFO: "DeviceInfo": "Device Name": "UWB-IoT-2BP"
+[STATUS]: INFO: "UWBSessionstate": 0
+[INFO]: INFO: "ADCTemperature": 40°C
+...
+```
+The repeated `INFO` token corresponds to the log priority level, ensuring consistent filtering on the Raspberry Pi.
+
+#### 4.1 **[varConverter.c](MQTT_sensorTag/Type2BP/varConverter.c)**
+This file converts internal MCU values into human‑readable strings.
+
+Examples:
+- `kStatus_HAL_UartSuccess` (=0) → "Success"
+- numeric enums → descriptive text
+
+These conversions ensure that UART logs contain meaningful, readable values.
+
+#### 4.2 **[printers.c](MQTT_sensorTag/Type2BP/printers.c)**
+This file defines the exact UART output format, ensuring all logs follow the same structure:
+  ```
+  [Field]: INFO: <label>: <value>
+  ```
+It centralizes all printing logic so the Raspberry Pi can reliably parse the output and map it to MQTT topics.
+
+Together, `varConverter.c` and `printers.c` guarantee that the UART output is predictable, structured, and easy to process.
+
+---
+
+### 5. Flashing the Firmware (DK6Programmer)
 
 To flash the compiled binary (`.bin`) into the Murata Type 2BP, use **DK6Programmer** (provided in the NXP SDK), the official flashing tool for DK6‑family MCUs.
 
@@ -123,19 +213,26 @@ You can then test with `serialListening.py` to look at the chip's output
 
 ---
 
-### 4. UART Data format
+### 6. Bonus Additional Files (Not Required for MQTT Pipeline)
 
-The Murata Type 2BP sends measurement data over UART using a structured ASCII format.
+The folder also contains extra files originally intended for UWB ranging experiments.
+They are not used in the MQTT pipeline but are included for completeness.
 
-For simplicity, we put the measured data inside the chip's logs and structured into 3 datatypes `CONFIG`,`STATUS` and `INFO`. They are then presented in the following format:
-```
-[CONFIG]: INFO: "DeviceInfo": "Device Name": "UWB-IoT-2BP"
-[STATUS]: INFO: "UWBSessionstate": 0
-[INFO]: INFO: "ADCTemperature": 40°C
-...
-```
+#### 6.1 **[MyApp_controlee.c](MQTT_sensorTag/Type2BP/MyApp_controlee.c)** - *2BP UWB helpers*
 
-The common `INFO` corresponds to the priority level of the log.
+- Contains helper functions for UWB ranging
+- Includes logic for:
+  - sending alerts
+  - printing distance‑based logs
+- Called inside the UWB ranging callback
+- Useful for understanding the original UWB behavior, but not required for UART → MQTT flow
+
+#### 6.2 **[2DK test ranging logic](MQTT_sensorTag/Type2DK/MyApp.c)** - *LED‑based ranging demo*
+
+- Implements a simple UWB ranging test for the 2DK board
+- Triggers LEDs depending on measured distance
+- Also called in the UWB callback
+- Included only as a reference example
 
 ## Raspberry Pi Broker
 
@@ -249,7 +346,7 @@ It listens to the sensor’s UART output, extracts relevant measurement fields, 
 The Raspberry Pi uses the Paho MQTT client to connect to the broker (local or remote).
 - **Publish loop**
 For each parsed measurement:
-```bash
+```
 client.publish(topic, value)
 ```
 - **Error Handling**
@@ -316,7 +413,8 @@ It connects to the broker, listens for incoming sensor topics, stores the receiv
                 "Message Count": 2,
                 "Value": 27,
                 "Timestamp": 20260505185050
-            }
+            },
+            ...
         ],
         "BatteryLevel":[
             {
@@ -328,7 +426,8 @@ It connects to the broker, listens for incoming sensor topics, stores the receiv
                 "Message Count": 2,
                 "Value": 99,
                 "Timestamp": 20260505185050
-            }
+            },
+            ...
         ]
     }
     ```
@@ -364,7 +463,7 @@ JSON files are grouped by measurement type, making them easy to inspect or proce
     python3 mqttApp.py <gui_bool>
     ```
     - `True` → GUI enabled
-    - `False` → console‑only mode
+    - default = `False` → console‑only mode
 
 - **Forward data to GUI**  
 When GUI mode is active, each parsed dictionary is forwarded to the GUI update function, enabling real‑time visualization.
