@@ -2,6 +2,8 @@
 MQTT Module for helpers definition
 """
 import paho.mqtt.client as mqtt
+import threading
+
 from utils.config import *
 from mqtt.callbacks import *
 from mqtt.layout import dispStatus,COMMANDS_HEADER,CONSOLE_HEADER
@@ -101,3 +103,11 @@ def mqttSubStart(broIP,broPort,userName,userPwd,topics:list[str]=topicList):
         print("MQTT connection closed")
     except Exception as e:
         print(f"Error: {e}")
+
+# Open separate thread for MQTT if GUI enabled
+def startMqttThread(topics:list,broIP,broPort,userName,userPwd):
+    # Launch thread for MQTT
+    mqttThread = threading.Thread(target=mqttSubStart,
+                                args=(broIP,broPort,userName,userPwd,topics),
+                                daemon=True)
+    mqttThread.start()

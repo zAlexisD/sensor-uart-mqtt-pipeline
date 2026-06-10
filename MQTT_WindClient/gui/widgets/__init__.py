@@ -1,6 +1,1 @@
-from batWidget import *
-from configWidget import *
-from tempWidget import *
-from textWidget import *
-from statusWidget import *
-from logWidget import *
+# __init__.py for Widgets

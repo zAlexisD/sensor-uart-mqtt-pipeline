@@ -1,1 +1,1 @@
-from MQTT_ProjectFolder.mqttApp.gui.controller import *
+# __init__.py for GUI

@@ -1,7 +1,7 @@
 """
 MQTT Module for API Callbacks
 """
-from mqtt.config import sessionID,MAX_PAYLOAD_SIZE,buffer
+from utils.config import sessionID,MAX_PAYLOAD_SIZE,buffer
 from mqtt.handlers import saveToJson
 from gui.controller import guiGetData,addToLog
 

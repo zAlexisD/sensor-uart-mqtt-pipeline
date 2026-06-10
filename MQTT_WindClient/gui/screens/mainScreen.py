@@ -2,15 +2,16 @@
 Screen Module for main page of GUI
 """
 from PyQt6.QtWidgets import QWidget,QGridLayout,QPushButton
-from widgets.batWidget import BatteryWidget
-from widgets.tempWidget import TemperatureWidget
-from widgets.logWidget import LogWidget
 from PyQt6 import QtCore
-from screens.configScreen import ConfigWindow
 # import random
 # import numpy as np
-from controller import guiUpdateData
-from mqtt.config import buffer
+
+from gui.widgets.batWidget import BatteryWidget
+from gui.widgets.tempWidget import TemperatureWidget
+from gui.widgets.logWidget import LogWidget
+from gui.screens.configScreen import ConfigWindow
+from gui.controller import guiUpdateData
+from utils.config import buffer
 
 class DashboardPage(QWidget):
     def __init__(self):

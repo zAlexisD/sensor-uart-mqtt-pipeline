@@ -2,8 +2,7 @@
 GUI Module for Logging diplay Widget
 """
 from PyQt6.QtWidgets import QWidget,QPlainTextEdit
-import queue
-from mqtt.config import LogQueue
+from utils.config import LogQueue
 from PyQt6.QtCore import QObject,pyqtSignal,QThread
 from mqtt.handlers import storeData
 

@@ -2,10 +2,11 @@
 Screen Module for Configuration data popup
 """
 from PyQt6.QtWidgets import QWidget,QGridLayout
-from mqtt.config import sessionID
 from json import load,JSONDecodeError
-from widgets.configWidget import ConfigWidget
-from controller import addToLog
+
+from utils.config import sessionID
+from gui.widgets.configWidget import ConfigWidget
+from gui.controller import addToLog
 
 class ConfigWindow(QWidget):
     def __init__(self):

@@ -1,3 +1,1 @@
-from mainScreen import *
-from startScreen import *
-from configScreen import *
+# __init__.py for Screens

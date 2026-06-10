@@ -3,12 +3,11 @@ MQTT Module for logic handling
 """
 from typing import Any
 import json
-from utils.config import *
 import os
 from PyQt6.QtCore import QObject, pyqtSignal
-from mqtt.manager import mqttSubStart
 import argparse
-import threading
+
+from utils.config import *
 
 #TODO: topic selection handler
 class TopicSelectController(QObject):
@@ -44,14 +43,6 @@ class TopicSelectController(QObject):
 
     def get_selected_topics(self):
         return self.selectedTopics
-    
-# Open separate thread for MQTT if GUI enabled
-def startMqttThread(topics:list,broIP,broPort,userName,userPwd):
-    # Launch thread for MQTT
-    mqttThread = threading.Thread(target=mqttSubStart,
-                                args=(broIP,broPort,userName,userPwd,topics),
-                                daemon=True)
-    mqttThread.start()
 
 # Init the json file as a dictionary with topics as key
 def initJson(defaultValue:Any,topicList:list[str]=topicList) -> dict[str,Any]:
@@ -62,7 +53,7 @@ def processData(topic:str,data:Any):
     # Init msgCount if is empty
     if msgCount == {}:
         msgCount = initJson(0,topicList)
-        
+
     # Update tracking count dictionary
     msgCount[topic] = msgCount.get(topic, 0) + 1
     
