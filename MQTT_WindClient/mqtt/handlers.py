@@ -3,19 +3,55 @@ MQTT Module for logic handling
 """
 from typing import Any
 import json
-from mqtt.config import topicList,sessionID,msgCount,timeTrack,infoTopics,statusTopics
+from utils.config import *
 import os
+from PyQt6.QtCore import QObject, pyqtSignal
+from mqtt.manager import mqttSubStart
+import argparse
+import threading
 
 #TODO: topic selection handler
-# def selectTopic():
+class TopicSelectController(QObject):
+    topic_selection = pyqtSignal(list)  # emits final topic list
+
+    def __init__(self):
+        self.selectedTopics  = []
+        self.availableTopics = topicList
     
-#     for topic in topicList:
-#         print(f"")
-#     indexTopic = input("Which?")
-#     return
+    # For CLI -> let the user input topics one by one for convenience
+    # Loop until user inputs "ok"
+    def set_topics_from_cli(self):
+        print("Please select initial topic set, enter 'all' to add all, 'ok' when done\n")
+        while True:
+            topic = input("> ")
+            if topic == "ok":
+                break
+            if topic == "all":
+                self.selectedTopics = self.availableTopics.copy()
+            else:
+                # Let the user add even unkown topics, but might never get publishment
+                #TODO: add small warning if unknown topics ?
+                self.selectedTopics.append(topic)
+                print(f"{topic} added\n")
+        
+        # Emit signal for consistency (even if GUI not used)
+        self.topic_selection.emit(self.selectedTopics)
+    
+    # For GUI -> set logic will be done in corresponding PyQt class
+    def set_topics_from_gui(self, topics):
+        self.selectedTopics = topics
+        self.topic_selection.emit(topics)
 
-
-#TODO: log handler?
+    def get_selected_topics(self):
+        return self.selectedTopics
+    
+# Open separate thread for MQTT if GUI enabled
+def startMqttThread(topics:list,broIP,broPort,userName,userPwd):
+    # Launch thread for MQTT
+    mqttThread = threading.Thread(target=mqttSubStart,
+                                args=(broIP,broPort,userName,userPwd,topics),
+                                daemon=True)
+    mqttThread.start()
 
 # Init the json file as a dictionary with topics as key
 def initJson(defaultValue:Any,topicList:list[str]=topicList) -> dict[str,Any]:
@@ -23,6 +59,10 @@ def initJson(defaultValue:Any,topicList:list[str]=topicList) -> dict[str,Any]:
 
 # Datatype handler for on_message callback -> actually convert back into dictionaries
 def processData(topic:str,data:Any):
+    # Init msgCount if is empty
+    if msgCount == {}:
+        msgCount = initJson(0,topicList)
+        
     # Update tracking count dictionary
     msgCount[topic] = msgCount.get(topic, 0) + 1
     
@@ -101,3 +141,25 @@ def saveToJson(topic:str,data:Any,sessionID:int=sessionID):
 
     except Exception as e:
         print(f"Error updating JSON file: {e}")
+
+def checkArgs():
+    parser = argparse.ArgumentParser(description="MQTT Client")
+
+    # GUI Flag -> set to True if --gui is passed
+    parser.add_argument("--gui",action="store_true",help="Enable GUI Mode")
+
+    # Broker connection parameters
+    parser.add_argument("--ip",type=str,default=brokerIP,
+                        help="MQTT Broker IP Address")
+    parser.add_argument("--port",type=int,default=brokerPort,
+                        help="MQTT Broker Port")
+    parser.add_argument("--user",type=str,default=clientUsername,
+                        help="MQTT client Username")
+    parser.add_argument("--pwd",type=str,default=clientPwd,
+                        help="MQTT client User Password")
+    
+    # Add argument to ask for password prompt to avoid displaying it
+    parser.add_argument("--ask-pwd", action="store_true",
+                    help="Prompt for password securely")
+    
+    return parser.parse_args()

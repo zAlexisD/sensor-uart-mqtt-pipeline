@@ -2,9 +2,9 @@
 MQTT Module for helpers definition
 """
 import paho.mqtt.client as mqtt
-from mqtt.config import *
+from utils.config import *
 from mqtt.callbacks import *
-from mqtt.layout import dispStatus,COMMANDS_HEADER
+from mqtt.layout import dispStatus,COMMANDS_HEADER,CONSOLE_HEADER
 
 def newClient(logs:bool = False,
               brokIP:str = brokerIP,brokPort:int = brokerPort,
@@ -85,3 +85,19 @@ def loopSession(client: mqtt, topic: list = wholeList):
     reqDisconnect(client)
     print("[INFO] Disconnected")
     client.loop_stop()
+
+def mqttSubStart(broIP,broPort,userName,userPwd,topics:list[str]=topicList):
+    print(CONSOLE_HEADER)
+    # MQTT Subscriber Client loop
+    mqttc = newClient(brokIP=broIP,brokPort=broPort,cliUser=userName,cliPwd=userPwd)
+    reqSubscription(mqttc,topics)
+
+    try:
+        loopSession(mqttc,topics)
+    except KeyboardInterrupt:
+        # CTRL + C
+        print("Stopped by user, disconnecting...")
+        reqDisconnect(mqttc)
+        print("MQTT connection closed")
+    except Exception as e:
+        print(f"Error: {e}")
