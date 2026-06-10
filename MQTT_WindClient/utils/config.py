@@ -5,7 +5,6 @@ import random
 import os
 import dotenv
 from datetime import datetime
-from mqtt.handlers import initJson
 import queue
 
 brokerIP   = "192.168.1.115"
@@ -37,7 +36,7 @@ timeTrack = []
 
 # Track topics measures via a dictionary counting messages received for specific topic
 # Initiated at 0, each time a message is received from a topic -> increase its count value of 1
-msgCount = initJson(0,topicList)
+msgCount = {}
 
 # Define a buffer queue for MQTT-GUI bridging
 buffer = queue.Queue(maxsize=300)
