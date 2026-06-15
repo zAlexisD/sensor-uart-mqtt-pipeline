@@ -14,6 +14,7 @@ class TopicSelectController(QObject):
     topic_selection = pyqtSignal(list)  # emits final topic list
 
     def __init__(self):
+        super().__init__()
         self.selectedTopics  = []
         self.availableTopics = topicList
     

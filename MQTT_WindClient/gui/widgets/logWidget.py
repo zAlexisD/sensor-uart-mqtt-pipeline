@@ -35,9 +35,13 @@ class LogWidget(QWidget):
         self.logPanel = QPlainTextEdit("[LOG ERROR]: --")
         self.logPanel.setReadOnly(True)
         self.logPanel.setStyleSheet("""
-            background-color: #111;
-            color: #0f0
-            font-family: Consolas, monospace;
+            QPlainTextEdit {
+                background-color: #1e1e1e;  /* Dark background */
+                color: #d4d4d4;             /* Light gray text */
+                border: none;
+                padding: 5px;
+                selection-background-color: #264f78; /* Selection color */
+            }
         """)
 
         # Start thread for continuous listening + copy of logs

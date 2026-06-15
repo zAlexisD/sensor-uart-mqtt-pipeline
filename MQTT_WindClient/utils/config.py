@@ -15,6 +15,7 @@ wholeList = "$SYS/#"
 # LEt's define the list of chosen topics
 topicList    = ["DeviceInfo","RangingParameter","UWBSessionstate","DeviceState",
                 "Timestamp","ADCTemperature","BatteryLevel","phHbci"]
+configTopics = ["DeviceInfo","RangingParameter"]
 infoTopics   = ["ADCTemperature","BatteryLevel"]
 statusTopics = ["UWBSessionstate","DeviceState","phHbci"]
 
