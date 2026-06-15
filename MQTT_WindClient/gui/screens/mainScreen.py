@@ -67,7 +67,7 @@ class DashboardPage(QWidget):
         # Log Widget
         if self.enableLog:
             self.logs = LogWidget()
-            self.logs.setFixedSize(self.widgetSize.window_nb,400)
+            self.logs.setFixedSize(self.widgetSize,400)
             self.widgetLayout.addWidget(self.logs,1,self.columnCount)
 
         self.mainLayout.addLayout(self.widgetLayout)
@@ -137,7 +137,6 @@ class DashboardPage(QWidget):
 
     def update_data(self):
         # --- Test updates --- #
-        
         # Update Temp, Battery, status if exist
         if self.infos or self.status:
             for topic in self.infos:
@@ -157,9 +156,16 @@ class DashboardPage(QWidget):
         if self.customs:
             self.textWidget.update_data(["Apple Caramel","Strawberry","Peach","Mango"])
             #TODO: look how to take status valeus in MQTT -> read json ? from buffer?
+        
+        # Update test the log widget
+        if self.enableLog:
+            random.seed(None)
+            logValue = random.choice(["Action Failed","Wrong Credentials",
+                                      "Topic not found","Buffer overloaded"])
+            self.logs.update_entry(logValue)
 
-        #TODO: Handle MQTT for status, timestamp and timestamp
-        # # Connection with MQTT client to update values
+        #TODO: Handle MQTT for status, timestamp, custom and logs
+        # # --- Connection with MQTT client to update values --- #
         # topic,value = guiUpdateData(buffer)
         # if topic == "ADCTemperature":
         #     self.temp.update_data(value)

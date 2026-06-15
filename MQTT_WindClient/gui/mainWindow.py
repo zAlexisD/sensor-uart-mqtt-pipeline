@@ -8,9 +8,10 @@ from gui.screens.mainScreen import DashboardPage
 from mqtt.handlers import TopicSelectController
 
 class MainWindow(QMainWindow):
-    def __init__(self,controller:TopicSelectController):
+    def __init__(self,controller:TopicSelectController,logs:bool=False):
         super().__init__()
         self.controller = controller
+        self.enableLogs = logs
         
         self.stack = QStackedWidget()
         self.setGeometry(50, 100, 1200, 500)
@@ -25,7 +26,7 @@ class MainWindow(QMainWindow):
 
     def on_topics_selected(self, topics):
         # Create dashboard widget here to avoid launching before topic selection
-        self.dashboard_page = DashboardPage(self.controller)
+        self.dashboard_page = DashboardPage(self.controller,self.enableLogs)
         self.stack.addWidget(self.dashboard_page)  # index 1
         # Switch to next page
         self.stack.setCurrentIndex(1)

@@ -1,7 +1,7 @@
 """
 GUI Module for Logging diplay Widget
 """
-from PyQt6.QtWidgets import QWidget,QPlainTextEdit
+from PyQt6.QtWidgets import QWidget,QPlainTextEdit,QVBoxLayout
 from utils.config import LogQueue
 from PyQt6.QtCore import QObject,pyqtSignal,QThread
 from mqtt.handlers import storeData
@@ -30,8 +30,9 @@ class LogWidget(QWidget):
     def __init__(self):
         super().__init__()
         self.build_ui()
-
+    #TODO: make widget look better
     def build_ui(self):
+        layout = QVBoxLayout()
         self.logPanel = QPlainTextEdit("[LOG ERROR]: --")
         self.logPanel.setReadOnly(True)
         self.logPanel.setStyleSheet("""
@@ -43,6 +44,9 @@ class LogWidget(QWidget):
                 selection-background-color: #264f78; /* Selection color */
             }
         """)
+
+        layout.addWidget(self.logPanel)
+        self.setLayout(layout)
 
         # Start thread for continuous listening + copy of logs
         self.thread = QThread()
@@ -56,3 +60,7 @@ class LogWidget(QWidget):
 
     def update_entry(self,entry:str):
         self.logPanel.appendPlainText(f"[LOG ERROR]: {entry}")
+        # Auto scroll to bottom
+        self.logPanel.verticalScrollBar().setValue(
+            self.logPanel.verticalScrollBar().maximum()
+        )
