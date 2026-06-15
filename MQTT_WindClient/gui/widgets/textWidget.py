@@ -1,18 +1,28 @@
 """
 Widget Module for displaying generic text on GUI
 """
-from PyQt6.QtWidgets import QWidget,QLabel
+from PyQt6.QtWidgets import QWidget,QLabel,QVBoxLayout
+import random
 
 class TextWidget(QWidget):
-    def __init__(self):
+    def __init__(self,topics):
         super().__init__()
+        self.topics = topics
+        self.labels = []
+
+        self.textLayout = QVBoxLayout()
         self.build_ui()
+        self.setLayout(self.textLayout)
 
+    #TODO: make layout more pleasant to read
     def build_ui(self):
-        self.label = QLabel("TEXT")
-        self.label.setStyleSheet("font-size: 32px;")
+        for topic in self.topics:
+            label = QLabel(f"{topic}: --")
+            label.setStyleSheet("font-size: 32px;")
+            self.labels.append(label)
+            self.textLayout.addWidget(label)
 
-    def update_value(self,value:str):
-        self.label.setText(value)
-        #TODO: Add interaction to change display when actions happens
-        # Here this widget would be mainly used for "press ENTER to start listening"
+    def update_data(self,values:list[str]):
+        for i,label in enumerate(self.labels):
+            value = random.choice(values)
+            label.setText(f"{self.topics[i]}: {value}")

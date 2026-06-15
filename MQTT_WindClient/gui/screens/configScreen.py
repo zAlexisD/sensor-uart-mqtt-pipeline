@@ -8,9 +8,12 @@ from utils.config import sessionID
 from gui.widgets.configWidget import ConfigWidget
 from gui.controller import addToLog
 
+#TODO: handle for any config type, not explicitly like this
+
 class ConfigWindow(QWidget):
-    def __init__(self):
+    def __init__(self,configList:list):
         super().__init__()
+        self.configList = configList
         
         self.setWindowTitle("Configurations")
 

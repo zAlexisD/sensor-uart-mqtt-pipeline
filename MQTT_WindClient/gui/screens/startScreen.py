@@ -115,5 +115,4 @@ class StartPage(QWidget):
     def on_confirm(self):
         # Return every checked checkboxes
         selected = [cb.text() for cb in self.checkboxes if cb.isChecked()]
-        selected.extend(self.custom_topics)
         self.controller.set_topics_from_gui(selected)

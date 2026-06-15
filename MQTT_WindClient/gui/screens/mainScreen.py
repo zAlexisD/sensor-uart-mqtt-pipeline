@@ -49,6 +49,7 @@ class DashboardPage(QWidget):
         self.setInfoWidget()
 
         # Customs and status simple label widgets
+        self.setCustomWidgets()
 
         # Log Widget
         self.logs = LogWidget()
@@ -56,6 +57,12 @@ class DashboardPage(QWidget):
 
         self.mainLayout.addLayout(self.widgetLayout)
         self.setLayout(self.mainLayout)
+
+        # Set up a timer to update the plots
+        self.timer = QtCore.QTimer()
+        self.timer.setInterval(500)  # 500ms = 2 updates per second
+        self.timer.timeout.connect(self.update_data)
+        self.timer.start()
 
     # Helper to assign topic names to their corresponding widget type
     def topicHandler(self):
@@ -66,8 +73,9 @@ class DashboardPage(QWidget):
             # Then handle config case
             if topic in configTopics:
                 self.config.append(topic)
+            #TODO: separate status and handle timestamp topic
             # Remaining includes status and customs, we treat them equally for now as there is no status widget type yet
-            else:
+            if (topic not in infoTopics) and (topic not in configTopics):
                 self.customs.append(topic)
 
     # Handler define measures widget
@@ -83,40 +91,40 @@ class DashboardPage(QWidget):
                     self.bat = BatteryWidget()
                     self.widgetLayout.addWidget(self.bat,1,self.columnCount)
                     self.columnCount += 1
-
-            # Set up a timer to update the plots
-            self.timer = QtCore.QTimer()
-            self.timer.setInterval(500)  # 500ms = 2 updates per second
-            self.timer.timeout.connect(self.update_data)
-            self.timer.start()
     
     # Handler for customed and status widgets
     def setCustomWidgets(self):
         if self.customs:
-            customLayout = QVBoxLayout()
-            for topic in self.customs:
-                new_widget = TextWidget(topic)
-                customLayout.addWidget(new_widget,1,self.columnCount)
-                self.columnCount += 1
+            self.textWidget = TextWidget(self.customs)
+            self.widgetLayout.addWidget(self.textWidget,1,self.columnCount)
+            self.columnCount += 1
 
     def update_data(self):
         # Test values
         random.seed(42)
         tempValue = np.random.randint(20, 60)
         batValue = np.random.randint(80, 100)
+        statusEx = ["Success","Failure","No Data"]
+        
+        # Update Temp and/or Battery if exist
+        if self.infos:
+            for topic in self.infos:
+                if topic == "ADCTemperature":
+                    self.temp.update_data(tempValue)
+                else:
+                    self.bat.update_data(batValue)
+            
+            # # Connection with MQTT client to update values
+            # topic,value = guiUpdateData(buffer)
+            # if topic == "ADCTemperature":
+            #     self.temp.update_data(value)
+            # else:
+            #     self.battery.update_data(value)
 
-        for topic in self.infos:
-            if topic == "ADCTemperature":
-                self.temp.update_data(tempValue)
-            else:
-                self.bat.update_data(batValue)
-
-        # # Connection with MQTT client to update values
-        # topic,value = guiUpdateData(buffer)
-        # if topic == "ADCTemperature":
-        #     self.temp.update_data(value)
-        # else:
-        #     self.battery.update_data(value)
+        # Update status and customs if exist
+        if self.customs:
+            self.textWidget.update_data(statusEx)
+            #TODO: look how to take status valeus in MQTT -> read json ?
 
     # Config window popup properties
     def openConfig(self):
