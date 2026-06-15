@@ -22,9 +22,15 @@ class TextWidget(QWidget):
             self.labels.append(label)
             self.textLayout.addWidget(label)
 
-    def update_data(self,values:list[str]):
-        for i,label in enumerate(self.labels):
-            # Unset randomness seed for string list
-            random.seed(None)
-            value = random.choice(values)
-            label.setText(f"{self.topics[i]}: {value}")
+    # # Update function for testing 
+    # def update_data(self,values:list[str]):
+    #     for i,label in enumerate(self.labels):
+    #         # Unset randomness seed for string list
+    #         random.seed(None)
+    #         value = random.choice(values)
+    #         label.setText(f"{self.topics[i]}: {value}")
+    
+    # Actual update function
+    def update_data(self,topic,value):
+        topicIndex = self.topics.index(topic)
+        self.labels[topicIndex].setText(f"{topic}: {value}")

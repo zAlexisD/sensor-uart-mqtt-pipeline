@@ -5,6 +5,7 @@ from PyQt6.QtWidgets import QWidget,QGridLayout,QPushButton,QVBoxLayout,QLabel
 from PyQt6 import QtCore
 import random
 import numpy as np
+import time
 
 from mqtt.handlers import TopicSelectController
 from gui.widgets.batWidget import BatteryWidget
@@ -28,8 +29,8 @@ class DashboardPage(QWidget):
         self.config = []
         self.infos = []
         self.status = []
-        # self.time = []
         self.customs = []
+        self.trackTime = False
         self.window_nb = 0
 
         self.setWindowTitle("MQTT GUI Application")
@@ -91,7 +92,9 @@ class DashboardPage(QWidget):
             # Handle status
             if topic in statusTopics:
                 self.status.append(topic)
-            #TODO: handle timestamp topic
+            # Handle timestamp topic
+            if topic == "Timestamp":
+                self.trackTime = True
             # Remaining customs
             if topic not in topicList:
                 self.customs.append(topic)
@@ -137,6 +140,12 @@ class DashboardPage(QWidget):
 
     def update_data(self):
         # --- Test updates --- #
+        # Generate sample timestamp for test
+        timeValue = ""
+        if self.trackTime:
+            #TODO: see how to compact the timestamp -> not really important here as it is a test
+            timeValue = str(time.time())
+        #TODO: See how to update timestamp as dynamic plots x-axis
         # Update Temp, Battery, status if exist
         if self.infos or self.status:
             for topic in self.infos:
@@ -150,27 +159,39 @@ class DashboardPage(QWidget):
             for topic in self.status:
                 random.seed(None)
                 statusValue = random.choice(["Success","Failure","No Data"])
-                self.statusWidget.update_data(topic,statusValue)
+                self.statusWidget.update_data(topic,statusValue,timeValue)
 
         # Update status and customs if exist
         if self.customs:
-            self.textWidget.update_data(["Apple Caramel","Strawberry","Peach","Mango"])
-            #TODO: look how to take status valeus in MQTT -> read json ? from buffer?
+            # # Initial test
+            # self.textWidget.update_data(["Apple Caramel","Strawberry","Peach","Mango"])
+            # Test with actual function
+            for topic in self.customs:
+                random.seed(None)
+                statusValue = random.choice(["Apple Caramel","Strawberry","Peach","Mango"])
+                self.textWidget.update_data(topic,statusValue)
         
         # Update test the log widget
         if self.enableLog:
             random.seed(None)
             logValue = random.choice(["Action Failed","Wrong Credentials",
                                       "Topic not found","Buffer overloaded"])
-            self.logs.update_entry(logValue)
+            self.logs.update_entry(logValue,timeValue)
 
-        #TODO: Handle MQTT for status, timestamp, custom and logs
+        #TODO: Handle MQTT for status, timestamp and custom
         # # --- Connection with MQTT client to update values --- #
-        # topic,value = guiUpdateData(buffer)
-        # if topic == "ADCTemperature":
-        #     self.temp.update_data(value)
-        # else:
-        #     self.bat.update_data(value)
+        # try:
+        #   topic,value = guiUpdateData(buffer)
+        #   if topic == "ADCTemperature":
+        #       self.temp.update_data(value)
+        #   if topic == "BatteryLevel":
+        #       self.bat.update_data(value)
+        #   if topic in self.status:
+        #       self.statusWidget.update_data(topic,value)
+        #   if topic in self.customs:
+        #       self.textWidget.update_data(topic,value)
+        #NOTE: defined like this, at each update might not update all status and widgets
+        # -> would need for loops or explicitly handle each case
 
     # Config window popup properties
     def openConfig(self):

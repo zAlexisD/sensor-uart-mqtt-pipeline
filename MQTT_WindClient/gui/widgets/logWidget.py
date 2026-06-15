@@ -33,7 +33,7 @@ class LogWidget(QWidget):
     #TODO: make widget look better
     def build_ui(self):
         layout = QVBoxLayout()
-        self.logPanel = QPlainTextEdit("[LOG ERROR]: --")
+        self.logPanel = QPlainTextEdit()
         self.logPanel.setReadOnly(True)
         self.logPanel.setStyleSheet("""
             QPlainTextEdit {
@@ -58,8 +58,8 @@ class LogWidget(QWidget):
         self.thread.started.connect(self.logManager.queueToList)
         self.thread.start()
 
-    def update_entry(self,entry:str):
-        self.logPanel.appendPlainText(f"[LOG ERROR]: {entry}")
+    def update_entry(self,entry:str,timestamp:str=""):
+        self.logPanel.appendPlainText(f"{timestamp}[LOG ERROR]: {entry}")
         # Auto scroll to bottom
         self.logPanel.verticalScrollBar().setValue(
             self.logPanel.verticalScrollBar().maximum()

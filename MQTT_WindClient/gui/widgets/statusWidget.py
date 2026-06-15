@@ -27,6 +27,6 @@ class StatusWidget(QWidget):
 
         self.setLayout(layout)
 
-    def update_data(self,topic,status):
-        self.status_list.addItem(f"{topic} STATUS: {status}")
+    def update_data(self,topic,status,timestamp:str=""):
+        self.status_list.addItem(f"{timestamp}[{topic} STATUS]: {status}")
         self.status_list.scrollToBottom()  # Keep latest visible
