@@ -13,7 +13,7 @@ class MainWindow(QMainWindow):
         self.controller = controller
         
         self.stack = QStackedWidget()
-        self.setGeometry(100, 60, 1000, 500)
+        self.setGeometry(50, 100, 1200, 500)
 
         self.start_page = StartPage(controller)
         self.stack.addWidget(self.start_page)      # index 0

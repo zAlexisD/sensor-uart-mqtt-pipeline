@@ -1,5 +1,5 @@
 """
-Widget Module for displaying generic text on GUI
+Widget Module for displaying simple text-based widgets on GUI
 """
 from PyQt6.QtWidgets import QWidget,QLabel,QVBoxLayout
 import random
@@ -18,11 +18,13 @@ class TextWidget(QWidget):
     def build_ui(self):
         for topic in self.topics:
             label = QLabel(f"{topic}: --")
-            label.setStyleSheet("font-size: 32px;")
+            label.setStyleSheet("font-size: 16px;")
             self.labels.append(label)
             self.textLayout.addWidget(label)
 
     def update_data(self,values:list[str]):
         for i,label in enumerate(self.labels):
+            # Unset randomness seed for string list
+            random.seed(None)
             value = random.choice(values)
             label.setText(f"{self.topics[i]}: {value}")
