@@ -14,7 +14,7 @@ class MainWindow(QMainWindow):
         self.enableLogs = logs
         
         self.stack = QStackedWidget()
-        self.setGeometry(50, 100, 1200, 500)
+        self.setGeometry(40, 50, 1200, 600)
 
         self.start_page = StartPage(controller)
         self.stack.addWidget(self.start_page)      # index 0

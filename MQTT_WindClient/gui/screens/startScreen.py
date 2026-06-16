@@ -24,6 +24,7 @@ class StartPage(QWidget):
 
         mainLayout = QVBoxLayout()
 
+        #TODO: this part is horrible on big screen, need to arrange
         headerWidget = QLabel("  Welcome to MQTT Subscriber Client. Please select topics to subscribe to.  ")
         headerWidget.setAlignment(Qt.AlignmentFlag.AlignCenter)
         mainLayout.addWidget(headerWidget)

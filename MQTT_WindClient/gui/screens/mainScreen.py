@@ -1,11 +1,11 @@
 """
 Screen Module for main page of GUI
 """
-from PyQt6.QtWidgets import QWidget,QGridLayout,QPushButton,QVBoxLayout,QLabel
+from PyQt6.QtWidgets import QWidget,QPushButton,QVBoxLayout,QHBoxLayout,QScrollArea
 from PyQt6 import QtCore
 import random
 import numpy as np
-import time
+from time import time,strftime,gmtime
 
 from mqtt.handlers import TopicSelectController
 from gui.widgets.batWidget import BatteryWidget
@@ -31,47 +31,39 @@ class DashboardPage(QWidget):
         self.status = []
         self.customs = []
         self.trackTime = False
-        self.window_nb = 0
 
         self.setWindowTitle("MQTT GUI Application")
         self.setStyleSheet("background-color: #514A6A")
 
         # Handle incoming topic list and set window size
         self.topicHandler()
-        self.widgetSize = self.countWindows()
         
         # Set widgets on the window grid
         self.mainLayout = QVBoxLayout()
-        self.widgetLayout = QGridLayout()
-        self.columnCount = 0
+        self.dataLayout = QHBoxLayout()
+        self.sideLayout = QHBoxLayout()
 
         # Config widgets
         if self.config :    # check not empty
-            # Set up button to display popup config window
-            showConfig = QPushButton("Show Config",self.config)
-            showConfig.clicked.connect(self.openConfig)
-            self.mainLayout.addWidget(showConfig)
-
-        # Add measurements widgets
+            self.setConfigWidget()
+        # Measurements widgets
         if self.infos:  
             self.setInfoWidget()
 
-        # Customs and status simple label widgets
-        self.textLayout = QVBoxLayout()
-        self.setStatusWidgets()
-        self.setCustomWidgets()
-        if self.status or self.customs:
-            # Add widget only if at least one of previous topics exists
-            self.widgetLayout.addLayout(self.textLayout,1,self.columnCount)
-            self.columnCount += 1
+        self.mainLayout.addLayout(self.dataLayout)
+        
+        # Customs widgets
+        if self.customs:
+            self.setCustomWidgets()
 
+        # Status widgets
+        if self.status:
+            self.setStatusWidgets()
         # Log Widget
         if self.enableLog:
-            self.logs = LogWidget()
-            self.logs.setFixedSize(self.widgetSize,400)
-            self.widgetLayout.addWidget(self.logs,1,self.columnCount)
+            self.setLogWidget()
+        self.mainLayout.addLayout(self.sideLayout)
 
-        self.mainLayout.addLayout(self.widgetLayout)
         self.setLayout(self.mainLayout)
 
         # Set up a timer to update the plots
@@ -99,44 +91,46 @@ class DashboardPage(QWidget):
             if topic not in topicList:
                 self.customs.append(topic)
 
-    # Handler to preset number of windows to adapt dimensions
-    def countWindows(self):
-        if self.infos:
-            self.window_nb += len(self.infos)
-        if self.status or self.customs:
-            self.window_nb += 1
-        if self.enableLog:
-            self.window_nb += 1
-        return int(1200/self.window_nb)
-
+    # Config widget handler
+    def setConfigWidget(self):
+        configLayout = QHBoxLayout()
+        # Set up button to display popup config window
+        showConfig = QPushButton("Show Config",self.config)
+        showConfig.clicked.connect(self.openConfig)
+        configLayout.addWidget(showConfig)
+        configLayout.addStretch()
+        self.mainLayout.addLayout(configLayout)
+        
     # Handler define measures widget
     def setInfoWidget(self):
         # Measurement info widgets
         for topic in self.infos:
             if topic == "ADCTemperature":
                 self.temp = TemperatureWidget()
-                self.temp.setFixedSize(self.widgetSize,400)
-                self.widgetLayout.addWidget(self.temp,1,self.columnCount)
-                self.columnCount += 1
+                self.temp.setMinimumSize(400, 300)
+                self.dataLayout.addWidget(self.temp)
             else:
                 self.bat = BatteryWidget()
-                self.bat.setFixedSize(self.widgetSize,400)
-                self.widgetLayout.addWidget(self.bat,1,self.columnCount)
-                self.columnCount += 1
+                self.bat.setMinimumSize(400, 300)
+                self.dataLayout.addWidget(self.bat)
     
     # Handler for status widgets
     def setStatusWidgets(self):
-        if self.status:
-            self.statusWidget = StatusWidget(self.status)
-            self.statusWidget.setFixedSize(self.widgetSize,200)
-            self.textLayout.addWidget(self.statusWidget)
+        self.statusWidget = StatusWidget(self.status)
+        self.statusWidget.setMinimumHeight(170)
+        self.sideLayout.addWidget(self.statusWidget)
 
     # Handler for customed widgets
     def setCustomWidgets(self):
-        if self.customs:
-            self.textWidget = TextWidget(self.customs)
-            self.textWidget.setFixedSize(self.widgetSize,200)
-            self.textLayout.addWidget(self.textWidget)
+        self.textWidget = TextWidget(self.customs)
+        self.textWidget.setMinimumWidth(400)
+        self.dataLayout.addWidget(self.textWidget)
+
+    # Handler for logs widget
+    def setLogWidget(self):
+        self.logs = LogWidget()
+        self.logs.setMinimumHeight(200)
+        self.sideLayout.addWidget(self.logs)
 
     def update_data(self):
         # --- Test updates --- #
@@ -144,7 +138,7 @@ class DashboardPage(QWidget):
         timeValue = ""
         if self.trackTime:
             #TODO: see how to compact the timestamp -> not really important here as it is a test
-            timeValue = str(time.time())
+            timeValue = strftime("%d%m%Y-%H:%M:%S ",gmtime(time()))
         #TODO: See how to update timestamp as dynamic plots x-axis
         # Update Temp, Battery, status if exist
         if self.infos or self.status:

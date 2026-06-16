@@ -1,7 +1,7 @@
 """
 Widget Module for displaying status widgets on GUI
 """
-from PyQt6.QtWidgets import QWidget,QVBoxLayout,QListWidget,QHBoxLayout,QPushButton
+from PyQt6.QtWidgets import QWidget,QVBoxLayout,QListWidget,QHBoxLayout,QPushButton,QGroupBox
 
 class StatusWidget(QWidget):
     def __init__(self,topics):
@@ -9,6 +9,14 @@ class StatusWidget(QWidget):
         # Make sure that topics includes status and timestamp
         self.topics = topics
 
+        mainLayout = QVBoxLayout()
+        self.build_ui()
+        mainLayout.addWidget(self.block)
+        
+        self.setLayout(mainLayout)
+
+    def build_ui(self):
+        self.block = QGroupBox("Status Panel")
         layout = QVBoxLayout()
 
         # Status list widget
@@ -25,8 +33,8 @@ class StatusWidget(QWidget):
         # Connect signal
         self.clear_btn.clicked.connect(self.status_list.clear)
 
-        self.setLayout(layout)
+        self.block.setLayout(layout)
 
     def update_data(self,topic,status,timestamp:str=""):
-        self.status_list.addItem(f"{timestamp}[{topic} STATUS]: {status}")
+        self.status_list.addItem(f"{timestamp}[{topic} STATUS] {status}")
         self.status_list.scrollToBottom()  # Keep latest visible

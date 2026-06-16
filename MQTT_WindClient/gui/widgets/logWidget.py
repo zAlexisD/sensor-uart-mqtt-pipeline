@@ -1,7 +1,7 @@
 """
 GUI Module for Logging diplay Widget
 """
-from PyQt6.QtWidgets import QWidget,QPlainTextEdit,QVBoxLayout
+from PyQt6.QtWidgets import QWidget,QPlainTextEdit,QVBoxLayout,QGroupBox
 from utils.config import LogQueue
 from PyQt6.QtCore import QObject,pyqtSignal,QThread
 from mqtt.handlers import storeData
@@ -29,12 +29,20 @@ class LogManager(QObject):
 class LogWidget(QWidget):
     def __init__(self):
         super().__init__()
+
+        mainLayout = QVBoxLayout()
         self.build_ui()
+        mainLayout.addWidget(self.block)
+        
+        self.setLayout(mainLayout)
+        
     #TODO: make widget look better
     def build_ui(self):
+        self.block = QGroupBox("Error Log Panel")
         layout = QVBoxLayout()
         self.logPanel = QPlainTextEdit()
         self.logPanel.setReadOnly(True)
+
         self.logPanel.setStyleSheet("""
             QPlainTextEdit {
                 background-color: #1e1e1e;  /* Dark background */
@@ -46,7 +54,7 @@ class LogWidget(QWidget):
         """)
 
         layout.addWidget(self.logPanel)
-        self.setLayout(layout)
+        self.block.setLayout(layout)
 
         # Start thread for continuous listening + copy of logs
         self.thread = QThread()
@@ -59,7 +67,7 @@ class LogWidget(QWidget):
         self.thread.start()
 
     def update_entry(self,entry:str,timestamp:str=""):
-        self.logPanel.appendPlainText(f"{timestamp}[LOG ERROR]: {entry}")
+        self.logPanel.appendPlainText(f"{timestamp}[LOG ERROR] {entry}")
         # Auto scroll to bottom
         self.logPanel.verticalScrollBar().setValue(
             self.logPanel.verticalScrollBar().maximum()
