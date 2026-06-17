@@ -8,14 +8,23 @@ from utils.config import *
 from mqtt.callbacks import *
 from mqtt.layout import dispStatus,COMMANDS_HEADER,CONSOLE_HEADER
 
-def newClient(logs:bool = False,
-              brokIP:str = brokerIP,brokPort:int = brokerPort,
-              cliUser:str = clientUsername,cliPwd:str = clientPwd) -> mqtt:
+def newClient(brokIP:str = brokerIP, brokPort:int = brokerPort,
+              cliUser:str = "", cliPwd:str = "",
+              enableAuths:bool=False,logs:bool = False) -> mqtt:
+    # Use default credentials only if using our custom broker
+    if brokIP == brokerIP:
+        enableAuths = True
+        cliUser = clientUsername
+        cliPwd  = clientPwd
+    # Create a new MQTT Client
     mqttc = mqtt.Client(callback_api_version=mqtt.CallbackAPIVersion.VERSION2,client_id=clientID)
-    mqttc.username_pw_set(cliUser,cliPwd)
+    # Handle if authentification needed
+    if enableAuths:
+        mqttc.username_pw_set(cliUser,cliPwd)
     # Enable logs in commande window if precised
     if logs:
         mqttc.on_log = on_log
+
     mqttc.on_connect = on_connect
     print("[REQ] Connecting to Broker...")
     mqttc.connect(brokIP,brokPort)
@@ -38,9 +47,10 @@ def reqDisconnect(client: mqtt):
     reqUnsubscription(client) # Unsubscribe from all before disconnecting
     client.disconnect()
 
-def loopSession(client: mqtt, topic: list = wholeList):
+def loopSession(client: mqtt, topic: list = wholeList,guibool:bool=False):
     # Add 1st loop flag for correct print ordering and launching listening loop
-    firstLoop = True
+    # guibool added to hommit this step if GUI enabled
+    firstLoop = True if not guibool else False
     # Enable user inputs while listening for publications
     client.loop_start()
     while True:
@@ -88,14 +98,14 @@ def loopSession(client: mqtt, topic: list = wholeList):
     print("[INFO] Disconnected")
     client.loop_stop()
 
-def mqttSubStart(broIP,broPort,userName,userPwd,topics:list[str]=topicList):
+def mqttSubStart(broIP:str,broPort:int,userName:str,userPwd:str,topics:list,guibool:bool):
     print(CONSOLE_HEADER)
     # MQTT Subscriber Client loop
     mqttc = newClient(brokIP=broIP,brokPort=broPort,cliUser=userName,cliPwd=userPwd)
     reqSubscription(mqttc,topics)
 
     try:
-        loopSession(mqttc,topics)
+        loopSession(mqttc,topics,guibool)
     except KeyboardInterrupt:
         # CTRL + C
         print("Stopped by user, disconnecting...")
@@ -105,9 +115,11 @@ def mqttSubStart(broIP,broPort,userName,userPwd,topics:list[str]=topicList):
         print(f"Error: {e}")
 
 # Open separate thread for MQTT if GUI enabled
-def startMqttThread(topics:list,broIP,broPort,userName,userPwd):
+def startMqttThread(topics:list,broIP,broPort,userName,userPwd,guibool):
+    # set Mqtt as main thread if CLI Mode, daemon thread if GUI mode
+    isDaemon = True if guibool else False
     # Launch thread for MQTT
     mqttThread = threading.Thread(target=mqttSubStart,
-                                args=(broIP,broPort,userName,userPwd,topics),
-                                daemon=True)
+                                args=(broIP,broPort,userName,userPwd,topics,guibool),
+                                daemon=isDaemon)
     mqttThread.start()

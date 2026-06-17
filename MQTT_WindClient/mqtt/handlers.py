@@ -6,6 +6,7 @@ import json
 import os
 from PyQt6.QtCore import QObject, pyqtSignal
 import argparse
+from time import time,strftime,gmtime
 
 from utils.config import *
 
@@ -51,12 +52,29 @@ def initJson(defaultValue:Any,topicList:list[str]=topicList) -> dict[str,Any]:
 
 # Datatype handler for on_message callback -> actually convert back into dictionaries
 def processData(topic:str,data:Any):
+    # Set msgCount as global variable to be updatable
+    global msgCount
+    # Handle case we use other MQTT brokers
+    if topic not in topicList:
+        myBroker = False
+
     # Init msgCount if is empty
-    if msgCount == {}:
-        msgCount = initJson(0,topicList)
+    if not msgCount:
+        if myBroker:
+            msgCount = initJson(0,topicList)
+        # For other brokers, manually initiate
+        else:
+            msgCount[topic] = 0
 
     # Update tracking count dictionary
     msgCount[topic] = msgCount.get(topic, 0) + 1
+
+    # Handle if other broker data
+    if not myBroker:
+        return "Other",{
+            "Message Count": msgCount[topic],
+            "Received": data,
+            "Timestamp": strftime("%d%m%Y-%H:%M:%S ",gmtime(time()))}
     
     # Handle Timestamp topic
     if topic == "Timestamp":
@@ -76,6 +94,7 @@ def processData(topic:str,data:Any):
 
     # Others cases (Config or status that does not change) -> handled directly in saveToJson
     # As they only return the data, we do not need to update them
+    #TODO: but if we could get updatable status then handle it separately
     else:
         return "Config/Status",{topic: data}
 
@@ -85,7 +104,7 @@ def storeData(dataDict: Any,filepath:str):
         json.dump(dataDict,f,indent=4)
 
 # Method to check if file exists, if not create + init it
-def setupJson(path:str):
+def setupJson(path:str,topics:list):
     # Load this file or create it if it does not exist yet
     if os.path.exists(path):
         with open(path, 'r', encoding='utf-8') as f:
@@ -93,12 +112,12 @@ def setupJson(path:str):
                 loaded = json.load(f)
                 if not isinstance(loaded, dict):
                     print("Warning: JSON root is not a dictionary. Overwriting.")
-                    loaded = initJson(defaultValue=[])
+                    loaded = initJson(defaultValue=[],topicList=topics)
             except json.JSONDecodeError:
                 print("Warning: JSON file is empty or invalid. Starting fresh.")
-                loaded = initJson(defaultValue=[])
+                loaded = initJson(defaultValue=[],topicList=topics)
     else:
-        loaded = initJson(defaultValue=[])
+        loaded = initJson(defaultValue=[],topicList=topics)
     
     return loaded
 
@@ -107,11 +126,15 @@ def saveToJson(topic:str,data:Any,sessionID:int=sessionID):
     jsonPath = f"data/{sessionID}.json"
     try:
         # Load this file or create it if it does not exist yet
-        loaded = setupJson(jsonPath)
+        if topic not in topicList:
+            loaded = setupJson(jsonPath,[topic])
+        else:
+            loaded = setupJson(jsonPath,topicList)
         
         # Process data and merge with the loaded one
         case,processedData = processData(topic,data)
-        if case == "Info":
+        
+        if case == "Info" or case == "Other":
             loaded.setdefault(topic,[]).append(processedData)
         # Save status in same file
         elif topic in statusTopics:
@@ -151,7 +174,7 @@ def checkArgs():
                         help="MQTT client User Password")
     
     # Add argument to ask for password prompt to avoid displaying it
-    parser.add_argument("--ask-pwd", action="store_true",
+    parser.add_argument("--ask_pwd", action="store_true",
                     help="Prompt for password securely")
     
     return parser.parse_args()
