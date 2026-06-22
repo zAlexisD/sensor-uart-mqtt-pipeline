@@ -20,6 +20,7 @@ clientUsername = "mqttPublisher"
 clientPwd = os.getenv("MQTT_PWD")
 
 # ========== UART settings ========== #
-tagCOM = "/dev/ttyUSB0"
+# tagCOM  = "/dev/ttyUSB0"     # If Linux
+tagCOM  = "COM4"             # IF Windows
 tagBaud = 300000
 tagData = {}

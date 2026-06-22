@@ -5,14 +5,14 @@ from settings import tagCOM,tagBaud
 #TODO: handle message content to only send relevant data -> might manage that in tag binary
 
 class UARTReader:
-    def __init__(self, port=tagCOM, baudrate=tagBaud, timeout=0.05):
+    def __init__(self, port:str=tagCOM, baud:int=tagBaud, timeout:float=0.05):
         try:
             self.ser = serial.Serial(
                 port=port,
-                baudrate=baudrate,
+                baudrate=baud,
                 timeout=timeout
             )
-            print(f"Listening on {port} at {baudrate} baud...")
+            print(f"Listening on {port} at {baud} baud...")
         except serial.SerialException as e:
             print(f"Failed to open port {port}: {e}")
 

@@ -6,3 +6,7 @@ MQTT_WindClient/gui/__pycache__
 MQTT_WindClient/gui/screens/__pycache__
 MQTT_WindClient/gui/widgets/__pycache__
 MQTT_WindClient/utils/__pycache__
+MQTT_RaspClient/.env
+MQTT_RaspClient/__pycache__
+MQTT_RaspClient/mqtt/__pycache__
+MQTT_RaspClient/uart/__pycache__
