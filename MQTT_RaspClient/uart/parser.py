@@ -28,49 +28,52 @@ class UARTParser:
 
         tagData = {}
         try:
-            # First remove all spaces for efficiency and as topic do not handle them
+            # First remove all spaces for efficiency and as topic names cannot have them
             handledLine = "".join(line.split())
 
-            if ":" in handledLine:
-                # Handle [CONFIG] data type -> {ConfigType:{ConfigKey:Value}}
-                if handledLine.startswith("[CONFIG]"):
-                    # type-> [CONFIG]:INFO:DeviceInfo:DeviceName:SR150_PROD_IOT_ROW
-                    _,_,configtype,key,value = handledLine.split(":")
-                    try:
-                        value = str(value)
-                    except ValueError:
-                        pass
-                    tagData[configtype][key] = value
+            # Handle [CONFIG] data type -> {ConfigType:{ConfigKey:Value}}
+            if handledLine.startswith("[CONFIG]"):
+                # type-> [CONFIG]:INFO:DeviceInfo:DeviceName:SR150_PROD_IOT_ROW
+                _,_,configtype,key,value = handledLine.split(":")
+                try:
+                    value = str(value)
+                except ValueError:
+                    pass
+                tagData[configtype][key] = value
 
-                # Handle [INFO] data type -> {InfoType:Value}
-                if handledLine.startswith("[INFO]"):
-                    # type-> [INFO]:INFO:Timestamp:746373863
-                    _,_,key,value = handledLine.split(":")
-                    # If temperature, remove the unit to keep only numbers
-                    #TODO: might make binary file only return numerical value for temp
-                    if key == "ADCTemperature":
-                        value,_ = value.split("°")
-                    try:
-                        #TODO: might consider float instead of int for more general cases
-                        value = int(value)
-                    except ValueError:
-                        pass
-                    tagData[key] = value
+            # Handle [INFO] data type -> {InfoType:Value}
+            elif handledLine.startswith("[INFO]"):
+                # type-> [INFO]:INFO:Timestamp:746373863
+                _,_,key,value = handledLine.split(":")
+                # If temperature, remove the unit to keep only numbers
+                #TODO: might make binary file only return numerical value for temp
+                if key == "ADCTemperature":
+                    value,_ = value.split("°")
+                try:
+                    #TODO: might consider float instead of int for more general cases
+                    value = int(value)
+                except ValueError:
+                    pass
+                tagData[key] = value
 
-                # Handle [Status] data type -> {StatusType:Value}
-                if handledLine.startswith("[STATUS]"):
-                    # type-> [STATUS]:INFO:phHbci:FAILURE
-                    _,_,key,value = handledLine.split(":")
-                    try:
-                        value = str(value)
-                    except ValueError:
-                        pass
-                    tagData[key] = value
+            # Handle [Status] data type -> {StatusType:Value}
+            elif handledLine.startswith("[STATUS]"):
+                # type-> [STATUS]:INFO:phHbci:FAILURE
+                _,_,key,value = handledLine.split(":")
+                try:
+                    value = str(value)
+                except ValueError:
+                    pass
+                tagData[key] = value
+
+            # Handle remaining output and any other sensor output
+            else:
+                tagData["SensorOutput"] = line
 
             return tagData if tagData else None
 
         except Exception as e:
-            print(f"[PARSER] Error parsing line '{handledLine}': {e}")
+            print(f"[PARSER] Error parsing line '{line}': {e}")
             return None
         
     def remove_ansi(self, text):
