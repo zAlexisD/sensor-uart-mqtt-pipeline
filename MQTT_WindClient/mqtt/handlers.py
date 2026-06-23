@@ -46,6 +46,8 @@ class TopicSelectController(QObject):
     def get_selected_topics(self):
         return self.selectedTopics
 
+    #TODO: see how to update topics in CLI when GUI enabled
+
 # Init the json file as a dictionary with topics as key
 def initJson(defaultValue:Any,topicList:list[str]=topicList) -> dict[str,Any]:
     return {key: defaultValue for key in topicList}
@@ -54,13 +56,12 @@ def initJson(defaultValue:Any,topicList:list[str]=topicList) -> dict[str,Any]:
 def processData(topic:str,data:Any):
     # Set msgCount as global variable to be updatable
     global msgCount
-    # Handle case we use other MQTT brokers
-    if topic not in topicList:
-        myBroker = False
+    # Handle case we use other topics than our personal ones
+    myTopics = False if topic not in topicList else True
 
     # Init msgCount if is empty
     if not msgCount:
-        if myBroker:
+        if myTopics:
             msgCount = initJson(0,topicList)
         # For other brokers, manually initiate
         else:
@@ -69,8 +70,8 @@ def processData(topic:str,data:Any):
     # Update tracking count dictionary
     msgCount[topic] = msgCount.get(topic, 0) + 1
 
-    # Handle if other broker data
-    if not myBroker:
+    # Handle if other topic data
+    if not myTopics:
         return "Other",{
             "Message Count": msgCount[topic],
             "Received": data,
