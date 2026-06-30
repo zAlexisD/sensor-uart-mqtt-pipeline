@@ -16,6 +16,7 @@ class TemperatureWidget(QWidget):
         layout = QGridLayout()
 
         # --- Values display --- #
+        #TODO: make layout better looking
         self.label = QLabel("ADC Temperature: -- °C")
         self.label.setStyleSheet("font-size: 32px;")
         layout.addWidget(self.label,0,0,alignment=Qt.AlignmentFlag.AlignCenter)
@@ -36,7 +37,7 @@ class TemperatureWidget(QWidget):
         #TODO: check how to initiate Y axis differently 
         self.y = np.zeros(self.windRange)
 
-        # Plotline creation with referance
+        # Plotline creation with reference
         pen = pg.mkPen(color=(255, 0, 0), width=2)
         self.curve = self.plot.plot(self.x,self.y,pen=pen)
 

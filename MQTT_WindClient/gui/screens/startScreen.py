@@ -9,7 +9,7 @@ from utils.config import topicList
 #TODO: separate in helpers for clarity
 
 class StartPage(QWidget):
-    def __init__(self,controller:TopicSelectController):
+    def __init__(self,controller:TopicSelectController,close_callback):
         super().__init__()
         self.controller = controller
         self.fullList = topicList + ["Select All"]
@@ -27,6 +27,7 @@ class StartPage(QWidget):
         #TODO: this part is horrible on big screen, need to arrange
         headerWidget = QLabel("  Welcome to MQTT Subscriber Client. Please select topics to subscribe to.  ")
         headerWidget.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        headerWidget.setFixedHeight(100)
         mainLayout.addWidget(headerWidget)
 
         self.cb_layout = QGridLayout()
@@ -51,9 +52,18 @@ class StartPage(QWidget):
         
         mainLayout.addLayout(self.cb_layout)
 
+        buttonLayout = QVBoxLayout()
+
         confirm = QPushButton("Confirm")
         confirm.clicked.connect(self.on_confirm)
-        mainLayout.addWidget(confirm)
+        buttonLayout.addWidget(confirm,alignment=Qt.AlignmentFlag.AlignCenter)
+        confirm.setFixedWidth(400)
+
+        cancel = QPushButton("Cancel and Close")
+        cancel.clicked.connect(close_callback)
+        buttonLayout.addWidget(cancel,alignment=Qt.AlignmentFlag.AlignRight)
+
+        mainLayout.addLayout(buttonLayout)
 
         self.setLayout(mainLayout)
 

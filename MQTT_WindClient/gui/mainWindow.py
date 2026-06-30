@@ -16,7 +16,7 @@ class MainWindow(QMainWindow):
         self.stack = QStackedWidget()
         self.setGeometry(40, 50, 1200, 600)
 
-        self.start_page = StartPage(controller)
+        self.start_page = StartPage(controller,self.close_callback)
         self.stack.addWidget(self.start_page)      # index 0
 
         self.setCentralWidget(self.stack)
@@ -26,7 +26,10 @@ class MainWindow(QMainWindow):
 
     def on_topics_selected(self, topics):
         # Create dashboard widget here to avoid launching before topic selection
-        self.dashboard_page = DashboardPage(self.controller,self.enableLogs)
+        self.dashboard_page = DashboardPage(self.controller,self.close_callback,self.enableLogs)
         self.stack.addWidget(self.dashboard_page)  # index 1
         # Switch to next page
         self.stack.setCurrentIndex(1)
+
+    def close_callback(self):
+        self.close()

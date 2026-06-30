@@ -1,0 +1,29 @@
+{
+    "testhihi": [
+        {
+            "Message Count": 1,
+            "Received": "Test message",
+            "Timestamp": "17062026-02:42:28 "
+        },
+        {
+            "Message Count": 2,
+            "Received": "Now we",
+            "Timestamp": "17062026-02:42:57 "
+        },
+        {
+            "Message Count": 3,
+            "Received": "test the",
+            "Timestamp": "17062026-02:43:13 "
+        },
+        {
+            "Message Count": 4,
+            "Received": "GUI Mode",
+            "Timestamp": "17062026-02:43:24 "
+        },
+        {
+            "Message Count": 5,
+            "Received": "Test",
+            "Timestamp": "17062026-02:43:34 "
+        }
+    ]
+}

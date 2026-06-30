@@ -3,7 +3,7 @@ GUI Module for logic methods between UI and MQTT Client
 """
 from typing import Any
 from queue import Queue,Full,Empty
-from utils.config import infoTopics,statusTopics,LogQueue
+from utils.config import configTopics,LogQueue
 import time
 
 # Take data from on_message MQTT callback
@@ -13,18 +13,14 @@ def guiGetData(buffer:Queue,topic:str,data:Any):
     except Full:
         addToLog(f"Tried to add ({topic},{data}) but buffer is full")
 
-# Update method for measures, status and timestamp
+# Update method for any data type except configuration
 def guiUpdateData(buffer:Queue):
     try:
         topic,data = buffer.get()
-        if (topic in infoTopics) or (topic in statusTopics):
+        if topic not in configTopics:
             return topic,data.decode()
-        if topic == "Timestamp":
-            return topic,int(data.decode())
     except Empty:
         addToLog(f"Tried to extract data but buffer is empty")
-
-#TODO: Handle timestamps
 
 # Handle log data
 def addToLog(errorLog:str,logQueue:Queue=LogQueue):
